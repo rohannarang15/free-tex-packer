@@ -138,7 +138,7 @@ class Project {
             if (cb) cb();
         }
     }
-
+    
     static load(pathToLoad = "") {
         Project.saveChanges(() => {
             let { path, data } = FileSystem.loadProject(pathToLoad);
@@ -154,7 +154,7 @@ class Project {
 
                 let images;
 
-                FileSystem.loadImages(data.images, res => {
+                FileSystem.loadImages(path, data.images, res => {
                     images = res;
 
                     let cf = 0;
@@ -166,10 +166,10 @@ class Project {
                             return;
                         }
 
-                        let path = data.folders[cf];
-                        FileSystem.startWatch(path);
+                        let folderPath = data.folders[cf];
+                        FileSystem.startWatch(folderPath);
 
-                        FileSystem.loadFolder(path, (res) => {
+                        FileSystem.loadFolder(path, folderPath, (res) => {
                             let keys = Object.keys(res);
                             for (let key of keys) {
                                 images[key] = res[key];

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const pth = require('path');
 const chokidar = require('chokidar');
 const { dialog } = require('electron').remote;
 
@@ -18,6 +19,11 @@ class FileSystem {
 
     static getExtFromPath(path) {
         return path.split(".").pop().toLowerCase();
+    }
+    
+    static resolvePathUsingProjectPath(projectPath, path)
+    {
+        return pth.resolve(pth.dirname(projectPath), path);
     }
 
     static selectFolder() {
@@ -63,7 +69,7 @@ class FileSystem {
                 });
             }
 
-            FileSystem.loadImages(files, cb);
+            FileSystem.loadImages(CURRENT_PROJECT_PATH, files, cb);
         }
         else {
             if (cb) cb();
@@ -77,7 +83,7 @@ class FileSystem {
 
         if (dir && dir.length) {
             let path = FileSystem.fixPath(dir[0]);
-            FileSystem.loadFolder(path, cb);
+            FileSystem.loadFolder(CURRENT_PROJECT_PATH, path, cb);
         }
         else {
             if (cb) cb();
@@ -114,11 +120,11 @@ class FileSystem {
         Observer.emit(GLOBAL_EVENT.FS_CHANGES, { event: event, path: FileSystem.fixPath(path) });
     }
 
-    static loadImages(list, cb) {
+    static loadImages(projectPath, list, cb) {
         let files = [];
 
         for (let item of list) {
-            let path = item.path;
+            let path = FileSystem.resolvePathUsingProjectPath(projectPath, item.path);
             let ext = FileSystem.getExtFromPath(path);
 
             if (IMAGES_EXT.indexOf(ext) >= 0) {
@@ -139,7 +145,9 @@ class FileSystem {
         });
     }
 
-    static loadFolder(path, cb) {
+    static loadFolder(projectPath, path, cb) 
+    {
+        path = FileSystem.resolvePathUsingProjectPath(projectPath, path);
         if (fs.existsSync(path)) {
             FileSystem.startWatch(path);
 
@@ -153,7 +161,7 @@ class FileSystem {
                 item.folder = path;
             }
 
-            FileSystem.loadImages(list, cb);
+            FileSystem.loadImages(projectPath, list, cb);
         }
         else {
             cb({});
